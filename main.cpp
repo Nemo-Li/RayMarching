@@ -8,7 +8,7 @@ int main() {
     Renderer render{};
     render.initialize(width, height, channel);
     unsigned char &image = render.render();
-    stbi_write_png("../result/scene/sampleReflect.png", width, height, channel, &image, width * 4);
+    stbi_write_png("../result/scene/beerLambert.png", width, height, channel, &image, width * 4);
     return 0;
 }
 

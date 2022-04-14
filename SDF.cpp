@@ -4,11 +4,17 @@
 
 #include <math.h>
 #include "SDF.h"
+#define M_2PI 6.28318530718f
 
 float SDF::circleSDF(float x, float y, float cx, float cy, float radius) {
     //圆的sdf为 像素点到圆心的距离减去圆的半径 (cx, cy) 圆心
     float ux = x - cx, uy = y - cy;
     return sqrtf(ux * ux + uy * uy) - radius;
+}
+
+float SDF::planeSDF(float x, float y, float px, float py, float nx, float ny)
+{
+    return (x - px)*nx + (y - py)*ny;
 }
 
 //线段sdf
@@ -24,6 +30,13 @@ float SDF::segmentSDF(float x, float y, float ax, float ay, float bx, float by)
 float SDF::capsuleSDF(float x, float y, float ax, float ay, float bx, float by, float radius)
 {
     return segmentSDF(x, y, ax, ay, bx, by) - radius;
+}
+
+//多边形
+float SDF::ngonSDF(float x, float y, float cx, float cy, float r, float n) {
+    float ux = x - cx, uy = y - cy, a = M_2PI / n;
+    float t = fmodf(atan2f(uy, ux) + M_2PI, a), s = sqrtf(ux * ux + uy * uy);
+    return planeSDF(s * cosf(t), s * sinf(t), r, 0.0f, cosf(a * 0.5f), sinf(a * 0.5f));
 }
 
 //矩形sdf函数 定向包围盒 OBB 轴向包围盒 AABB

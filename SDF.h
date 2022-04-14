@@ -54,6 +54,10 @@ public:
     static float boxSDF(float x, float y, float cx, float cy, float theta, float sx, float sy);
 
     static float triangleSDF(float x, float y, float ax, float ay, float bx, float by, float cx, float cy);
+
+    static float planeSDF(float x, float y, float px, float py, float nx, float ny);
+
+    static float ngonSDF(float x, float y, float cx, float cy, float r, float n);
 };
 
 

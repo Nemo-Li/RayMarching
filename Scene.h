@@ -14,6 +14,8 @@ public:
     static Result moonEmissiveScene(float x, float y);
 
     static Result sampleReflectScene(float x, float y);
+
+    static Result beerLambertScene(float x, float y);
 };
 
 

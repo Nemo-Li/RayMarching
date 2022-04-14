@@ -143,23 +143,43 @@ float Renderer::trace(float ox, float oy, float dx, float dy) {
 }
 
 glm::vec3 Renderer::trace(float ox, float oy, float dx, float dy, int depth) {
-    float step = 0.0f;
-//    float sign = scene(ox, oy).sdf > 0.0f ? 1.0f : -1.0f;
+    float step = 1e-3f;
+    float sign = scene(ox, oy).sdf > 0.0f ? 1.0f : -1.0f;
     for (int i = 0; i < MAXITER && step < MAXDIST; ++i) {
-        float x = ox + dx * step, y = oy + dy * step;
-        Result result = scene(x, y);
-        float sdf = result.sdf;
-        if (sdf < EPSILON) {
-            glm::vec3 sum = result.emissive;
-            if (depth < MAX_DEPTH && result.reflectivity > 0.0f) {
-                float nx, ny, rx, ry;
+        float x = ox + dx * step;
+        float y = oy + dy * step;
+        Result ret = scene(x, y);
+        // reach the egde(==0) or inside(<0)
+        if (ret.sdf * sign < EPSILON) {
+            glm::vec3 sum = ret.emissive;
+            if (depth < MAX_DEPTH && (ret.reflectivity > 0.0f || ret.eta > 0.0f)) {
+                // get normal and reflect.
+                float nx = 0, ny = 0, rx = 0, ry = 0;
+                float reflectivity = ret.reflectivity;
                 gradient(x, y, nx, ny);
-                reflect(dx, dy, nx, ny, rx, ry);
-                sum += result.reflectivity * trace(x + nx * BIAS, y + ny * BIAS, rx, ry, depth + 1);
+                // inside, need to reverse normal.
+                nx *= sign;
+                ny *= sign;
+                // refraction.
+                if (ret.eta > 0.0f) {
+                    if (refract(dx, dy, nx, ny, sign < 0.0f ? ret.eta : 1.0f / ret.eta, rx, ry)) {
+                        float cosi = -(dx * nx + dy * ny);
+                        float cost = -(rx * nx + ry * ny);
+                        reflectivity = sign < 0.0f ? fresnel(cosi, cost, ret.eta, 1.0f)
+                                                   : fresnel(cosi, cost, 1.0f, ret.eta);
+                        sum += (1.0f - reflectivity) * trace(x - nx * BIAS, y - ny * BIAS, rx, ry, depth + 1);
+                    } else
+                        reflectivity = 1.0f;// full reflect.
+                }
+                // reflection.
+                if (reflectivity > 0.0f) {
+                    reflect(dx, dy, nx, ny, rx, ry);
+                    sum += reflectivity * trace(x + nx * BIAS, y + ny * BIAS, rx, ry, depth + 1);
+                }
             }
-            return sum;
+            return sum * beerLambert(ret.absorption, step);
         }
-        step += sdf;
+        step += ret.sdf * sign;
     }
     return glm::vec3(0.0f);
 }
@@ -188,19 +208,19 @@ Result Renderer::scene(float x, float y) {
     // scene 11.
     //Result ret = Scene::refractEmissiveScene(x, y);
     // scene 12.
-    //Result ret = Scene::beerLambertScene(x, y);
+    Result ret = Scene::beerLambertScene(x, y);
     // scene 13.
     //Result ret = Scene::heartScene(x, y);
     // scene 14.
     //Result ret = Scene::finalScene(x, y);
     // scene 15.
     //Result ret = Scene::nameScene(x, y);
-    Result ret = Scene::sampleReflectScene(x, y);
+    // scene 16.
+    //Result ret = Scene::sampleReflectScene(x, y);
     return ret;
 }
 
-glm::vec3 Renderer::beerLambert(glm::vec3 a, float d)
-{
+glm::vec3 Renderer::beerLambert(glm::vec3 a, float d) {
     return glm::vec3(expf(-a.x * d), expf(-a.y * d), expf(-a.z * d));
 }
 

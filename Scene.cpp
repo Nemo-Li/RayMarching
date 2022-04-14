@@ -27,3 +27,12 @@ Result Scene::sampleReflectScene(float x, float y) {
     Result c = {SDF::boxSDF(x, y, 0.8f, 0.5f, M_2PI / 16.0f, 0.1f, 0.1f), glm::vec3(0.0f), 0.9f};
     return SDF::unionOperation(SDF::unionOperation(a, b), c);
 }
+
+Result Scene::beerLambertScene(float x, float y)
+{
+    Result a = { SDF::circleSDF(x, y, 0.3f, -0.2f, 0.1f), glm::vec3(10.0f),
+                 0.0f, 0.0f, glm::vec3(0.0f) };
+    Result b = { SDF::ngonSDF(x, y, 0.5f, 0.5f, 0.25f, 8.0f), glm::vec3(0.0f),
+                 0.0f, 1.5f, glm::vec3(4.0f, 1.0f, 4.0f)};
+    return SDF::unionOperation(a, b);
+}
