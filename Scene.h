@@ -22,6 +22,8 @@ public:
     static Result WScene(float x, float y);
 
     static Result WLScene(float x, float y);
+
+    static Result nameScene(float x, float y);
 };
 
 

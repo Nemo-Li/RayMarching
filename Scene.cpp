@@ -56,3 +56,23 @@ Result Scene::WLScene(float x, float y) {
     Result lc = Result(SDF::LcharSDF(x, y, 0.55 + 0.03, 0.55, 0.01f), glm::vec3(3.5f, 3.5f, 3.5f), 0.0f);
     return SDF::unionOperation(SDF::unionOperation(light, wc), lc);
 }
+
+Result Scene::nameScene(float x, float y)
+{
+    Result n = Result(SDF::NcharSDF(x, y, 0.25 + 0.03, 0.3, 0.01f), glm::vec3(3.5f, 0.0f, 0.0f), 0.0f);
+    Result e = Result(SDF::EcharSDF(x, y, 0.40 + 0.03, 0.3, 0.01f), glm::vec3(3.5f, 3.5f, 0.0f), 0.0f);
+    Result m = Result(SDF::McharSDF(x, y, 0.55 + 0.03, 0.3, 0.01f), glm::vec3(0.0f, 3.5f, 3.5f), 0.0f);
+    Result o = Result(SDF::OcharSDF(x, y, 0.70 + 0.03, 0.3, 0.01f), glm::vec3(3.4f, 1.64f, 0.76f), 0.0f);
+    Result w = Result(SDF::WcharSDF(x, y, 0.40 + 0.03, 0.55, 0.01f), glm::vec3(0.0f, 3.5f, 0.0f), 0.0f);
+    Result l = Result(SDF::LcharSDF(x, y, 0.55 + 0.03, 0.55, 0.01f), glm::vec3(3.5f, 3.5f, 3.5f), 0.0f);
+
+    Result logo = { SDF::ngonSDF(x, y, 0.15f, 0.15f, 0.10f, 8.0f), glm::vec3(0.0f),
+                    0.0f, 1.5f, glm::vec3(4.0f, 4.0f, 1.0f) };
+    Result light = Result(SDF::circleSDF(x, y, 0.8f, 0.85f, 0.025f), glm::vec3(8.0), 0.0f);
+    Result ret1 = SDF::unionOperation(n, e);
+    Result ret2 = SDF::unionOperation(m, o);
+    Result ret3 = SDF::unionOperation(w, l);
+    Result f1 = SDF::unionOperation(ret1, ret2);
+    Result f2 = SDF::unionOperation(ret3, logo);
+    return SDF::unionOperation(SDF::unionOperation(f1, f2), light);
+}

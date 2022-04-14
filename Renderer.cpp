@@ -7,6 +7,7 @@
 #include "SDF.h"
 #include "tbb/parallel_for.h"
 #include "Scene.h"
+#include <iomanip>
 
 #define M_2PI 6.28318530718f
 #define EPSILON 1e-6f
@@ -74,7 +75,8 @@ unsigned char &Renderer::render() {
             //sampling and lighting
             color = sample(float(col) / m_width, float(row) / m_height);
 
-            std::cout << "渲染第" << row << "行 第" << col << "列像素点" << "进度为 " << (i * 1.0f) / float(totalPix) << std::endl;
+//            std::cout << "渲染第" << row << "行 第" << col << "列像素点" << "进度为 " << (i * 1.0f) / float(totalPix) << std::endl;
+            std::cout << std::setw(3) << (i * 1.0f) / float(totalPix) << std::endl;
             //保存到png图片
             color.x /= (color.x + 1.0f);
             color.y /= (color.y + 1.0f);
@@ -223,7 +225,7 @@ Result Renderer::scene(float x, float y) {
     //Result ret = Scene::nameScene(x, y);
     // scene 16.
     //Result ret = Scene::sampleReflectScene(x, y);
-    Result ret = Scene::WLScene(x, y);
+    Result ret = Scene::nameScene(x, y);
     return ret;
 }
 

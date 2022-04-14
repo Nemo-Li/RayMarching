@@ -62,6 +62,14 @@ public:
     static float WcharSDF(float x, float y, float cx, float cy, float radius);
 
     static float LcharSDF(float x, float y, float cx, float cy, float radius);
+
+    static float NcharSDF(float x, float y, float cx, float cy, float radius);
+
+    static float McharSDF(float x, float y, float cx, float cy, float radius);
+
+    static float EcharSDF(float x, float y, float cx, float cy, float radius);
+
+    static float OcharSDF(float x, float y, float cx, float cy, float radius);
 };
 
 
