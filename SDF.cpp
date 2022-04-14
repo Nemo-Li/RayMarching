@@ -72,6 +72,32 @@ float SDF::triangleSDF(float x, float y, float ax, float ay, float bx, float by,
             (ax - cx) * (y - cy) > (ay - cy) * (x - cx) ? -d : d;
 }
 
+float SDF::WcharSDF(float x, float y, float cx, float cy, float radius)
+{
+    glm::vec2 point[5];
+    point[0] = glm::vec2(0.0, -0.06) + glm::vec2(cx, cy);
+    point[1] = glm::vec2(-0.03, +0.06) + glm::vec2(cx, cy);
+    point[2] = glm::vec2(+0.03, +0.06) + glm::vec2(cx, cy);
+    point[3] = glm::vec2(-0.06, -0.06) + glm::vec2(cx, cy);
+    point[4] = glm::vec2(+0.06, -0.06) + glm::vec2(cx, cy);
+    float c1 = capsuleSDF(x, y, point[0].x, point[0].y, point[1].x, point[1].y, radius);
+    float c2 = capsuleSDF(x, y, point[1].x, point[1].y, point[3].x, point[3].y, radius);
+    float c3 = capsuleSDF(x, y, point[0].x, point[0].y, point[2].x, point[2].y, radius);
+    float c4 = capsuleSDF(x, y, point[2].x, point[2].y, point[4].x, point[4].y, radius);
+    return fminf(fminf(c1, c2), fminf(c3, c4));
+}
+
+float SDF::LcharSDF(float x, float y, float cx, float cy, float radius)
+{
+    glm::vec2 point[4];
+    point[1] = glm::vec2(-0.05, -0.06) + glm::vec2(cx, cy);
+    point[2] = glm::vec2(-0.05, +0.06) + glm::vec2(cx, cy);
+    point[3] = glm::vec2(+0.05, +0.06) + glm::vec2(cx, cy);
+    float c2 = capsuleSDF(x, y, point[1].x, point[1].y, point[2].x, point[2].y, radius);
+    float c3 = capsuleSDF(x, y, point[2].x, point[2].y, point[3].x, point[3].y, radius);
+    return fminf(c2, c3);
+}
+
 Result SDF::unionOperation(Result a, Result b)
 {
     return a.sdf < b.sdf ? a : b;

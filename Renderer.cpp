@@ -2,6 +2,7 @@
 // Created by Nemo li on 2022/4/13.
 //
 
+#include <iostream>
 #include "Renderer.h"
 #include "SDF.h"
 #include "tbb/parallel_for.h"
@@ -9,7 +10,7 @@
 
 #define M_2PI 6.28318530718f
 #define EPSILON 1e-6f
-#define MAX_DEPTH 3
+#define MAX_DEPTH 6
 #define BIAS 1e-4f
 //迭代次数，追踪需要次数长
 #define MAXITER 32
@@ -59,11 +60,12 @@ void Renderer::initialize(int width, int height, int channel) {
     m_height = height;
     m_channel = channel;
     delete m_image;
-    m_samples = 64;
+    m_samples = 256;
     m_image = new unsigned char[m_width * m_height * m_channel];
 }
 
 unsigned char &Renderer::render() {
+    int totalPix = m_width * m_height;
     parallel_for(blocked_range<size_t>(0, m_height * m_width, 5000), [&](blocked_range<size_t> &r) {
         for (size_t i = r.begin(); i != r.end(); ++i) {
             size_t col = i % m_width;
@@ -72,7 +74,11 @@ unsigned char &Renderer::render() {
             //sampling and lighting
             color = sample(float(col) / m_width, float(row) / m_height);
 
+            std::cout << "渲染第" << row << "行 第" << col << "列像素点" << "进度为 " << (i * 1.0f) / float(totalPix) << std::endl;
             //保存到png图片
+            color.x /= (color.x + 1.0f);
+            color.y /= (color.y + 1.0f);
+            color.z /= (color.z + 1.0f);
             drawPixel(row, col, color);
         }
     });
@@ -208,7 +214,7 @@ Result Renderer::scene(float x, float y) {
     // scene 11.
     //Result ret = Scene::refractEmissiveScene(x, y);
     // scene 12.
-    Result ret = Scene::beerLambertScene(x, y);
+    //Result ret = Scene::beerLambertScene(x, y);
     // scene 13.
     //Result ret = Scene::heartScene(x, y);
     // scene 14.
@@ -217,6 +223,7 @@ Result Renderer::scene(float x, float y) {
     //Result ret = Scene::nameScene(x, y);
     // scene 16.
     //Result ret = Scene::sampleReflectScene(x, y);
+    Result ret = Scene::WLScene(x, y);
     return ret;
 }
 

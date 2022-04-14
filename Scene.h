@@ -16,6 +16,12 @@ public:
     static Result sampleReflectScene(float x, float y);
 
     static Result beerLambertScene(float x, float y);
+
+    static Result rectRefractEmissiveScene(float x, float y);
+
+    static Result WScene(float x, float y);
+
+    static Result WLScene(float x, float y);
 };
 
 

@@ -36,3 +36,23 @@ Result Scene::beerLambertScene(float x, float y)
                  0.0f, 1.5f, glm::vec3(4.0f, 1.0f, 4.0f)};
     return SDF::unionOperation(a, b);
 }
+
+Result Scene::rectRefractEmissiveScene(float x, float y)
+{
+    Result ret1 = Result(SDF::boxSDF(x, y, 0.5f, 0.5f, 0.0f, 0.3f, 0.2f), glm::vec3(0.0f), 0.2f, 1.5f, glm::vec3(4.0f, 4.0f, 1.0f));
+    Result ret2 = Result(SDF::circleSDF(x, y, 0.1f, 0.1f, 0.1f), glm::vec3(7.0f), 0.0f, 0.0f);
+    return SDF::unionOperation(ret1, ret2);
+}
+
+Result Scene::WScene(float x, float y) {
+    Result light = Result(SDF::circleSDF(x, y, 0.8f, 0.85f, 0.025f), glm::vec3(8.0), 0.0f);
+    Result wc = Result(SDF::WcharSDF(x, y, 0.35 + 0.05, 0.55, 0.01f), glm::vec3(0.0f, 3.5f, 0.0f), 0.0f);
+    return SDF::unionOperation(light, wc);
+}
+
+Result Scene::WLScene(float x, float y) {
+    Result light = Result(SDF::circleSDF(x, y, 0.8f, 0.85f, 0.025f), glm::vec3(8.0), 0.0f);
+    Result wc = Result(SDF::WcharSDF(x, y, 0.40 + 0.03, 0.55, 0.01f), glm::vec3(0.0f, 3.5f, 0.0f), 0.0f);
+    Result lc = Result(SDF::LcharSDF(x, y, 0.55 + 0.03, 0.55, 0.01f), glm::vec3(3.5f, 3.5f, 3.5f), 0.0f);
+    return SDF::unionOperation(SDF::unionOperation(light, wc), lc);
+}

@@ -58,6 +58,10 @@ public:
     static float planeSDF(float x, float y, float px, float py, float nx, float ny);
 
     static float ngonSDF(float x, float y, float cx, float cy, float r, float n);
+
+    static float WcharSDF(float x, float y, float cx, float cy, float radius);
+
+    static float LcharSDF(float x, float y, float cx, float cy, float radius);
 };
 
 
