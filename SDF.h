@@ -38,12 +38,15 @@ class SDF {
 public:
     // several shape sdf.
     static float circleSDF(float x, float y, float cx, float cy, float radius);
+
     static float segmentSDF(float x, float y, float ax, float ay, float bx, float by);
 
 
     // sdf operation.
     static Result unionOperation(Result a, Result b);
+
     static Result intersectOperation(Result a, Result b);
+
     static Result subtractOperation(Result a, Result b);
 
     static float capsuleSDF(float x, float y, float ax, float ay, float bx, float by, float radius);

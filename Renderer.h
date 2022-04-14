@@ -43,6 +43,14 @@ public:
         if (!(temp[2] == temp[2]))temp[2] = 0;
         return temp;
     }
+
+    static void reflect(float ix, float iy, float nx, float ny, float &rx, float &ry);
+
+    static int refract(float ix, float iy, float nx, float ny, float eta, float &rx, float &ry);
+
+    static float fresnel(float cosi, float cost, float etai, float etat);
+
+    static glm::vec3 beerLambert(glm::vec3 a, float d);
 };
 
 

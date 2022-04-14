@@ -9,6 +9,12 @@
 
 #define M_2PI 6.28318530718f
 #define EPSILON 1e-6f
+#define MAX_DEPTH 3
+#define BIAS 1e-4f
+//迭代次数，追踪需要次数长
+#define MAXITER 32
+//光线行进总长，过短效果不明显
+#define MAXDIST 5.0f
 
 using namespace tbb;
 
@@ -65,6 +71,7 @@ unsigned char &Renderer::render() {
             glm::vec3 color(0.0);
             //sampling and lighting
             color = sample(float(col) / m_width, float(row) / m_height);
+
             //保存到png图片
             drawPixel(row, col, color);
         }
@@ -94,7 +101,7 @@ glm::vec3 Renderer::sample(float x, float y) {
     glm::vec3 radiance = glm::vec3(0.0f);
     //对每个像素采样 samples次 360度的光线
     for (int i = 0; i < m_samples; ++i) {
-        float angle = M_2PI * (i + static_cast<float>(rand()) / RAND_MAX) / float(m_samples);
+        float angle = M_2PI * (i + float(rand()) / RAND_MAX) / float(m_samples);
 
         radiance += deNan(trace(x, y, cosf(angle), sinf(angle), 0));
     }
@@ -137,14 +144,21 @@ float Renderer::trace(float ox, float oy, float dx, float dy) {
 
 glm::vec3 Renderer::trace(float ox, float oy, float dx, float dy, int depth) {
     float step = 0.0f;
-    int maxIter = 10;
-    float maxDistance = 2.0f;
-    float epsilon = 1e-6f; //0.000001
-    for (int i = 0; i < maxIter && step < maxDistance; ++i) {
-        const Result &result = Scene::sampleReflectScene(float(ox + dx * step), float(oy + dy * step));
+//    float sign = scene(ox, oy).sdf > 0.0f ? 1.0f : -1.0f;
+    for (int i = 0; i < MAXITER && step < MAXDIST; ++i) {
+        float x = ox + dx * step, y = oy + dy * step;
+        Result result = scene(x, y);
         float sdf = result.sdf;
-        if (sdf < epsilon)
-            return result.emissive;
+        if (sdf < EPSILON) {
+            glm::vec3 sum = result.emissive;
+            if (depth < MAX_DEPTH && result.reflectivity > 0.0f) {
+                float nx, ny, rx, ry;
+                gradient(x, y, nx, ny);
+                reflect(dx, dy, nx, ny, rx, ry);
+                sum += result.reflectivity * trace(x + nx * BIAS, y + ny * BIAS, rx, ry, depth + 1);
+            }
+            return sum;
+        }
         step += sdf;
     }
     return glm::vec3(0.0f);
@@ -154,7 +168,7 @@ Result Renderer::scene(float x, float y) {
     // scene 1.
     //Result ret = Scene::oneEmissiveSphereScene(ox + dx * step, oy + dy * step);
     // scene 2.
-    Result ret = Scene::threeEmissiveSphereScene(x, y);
+    //Result ret = Scene::threeEmissiveSphereScene(x, y);
     // scene 3.
     //Result ret = Scene::moonEmissiveScene(ox + dx * step, oy + dy * step);
     // scene 4.
@@ -181,10 +195,39 @@ Result Renderer::scene(float x, float y) {
     //Result ret = Scene::finalScene(x, y);
     // scene 15.
     //Result ret = Scene::nameScene(x, y);
+    Result ret = Scene::sampleReflectScene(x, y);
     return ret;
+}
+
+glm::vec3 Renderer::beerLambert(glm::vec3 a, float d)
+{
+    return glm::vec3(expf(-a.x * d), expf(-a.y * d), expf(-a.z * d));
 }
 
 void Renderer::gradient(float x, float y, float &nx, float &ny) {
     nx = (scene(x + EPSILON, y).sdf - scene(x - EPSILON, y).sdf) * (0.5f / EPSILON);
     ny = (scene(x, y + EPSILON).sdf - scene(x, y - EPSILON).sdf) * (0.5f / EPSILON);
+}
+
+float Renderer::fresnel(float cosi, float cost, float etai, float etat) {
+    float rs = (etat * cosi - etai * cost) / (etat * cosi + etai * cost);
+    float rp = (etai * cosi - etat * cost) / (etai * cosi + etat * cost);
+    return (rs * rs + rp * rp) * 0.5f;
+}
+
+void Renderer::reflect(float ix, float iy, float nx, float ny, float &rx, float &ry) {
+    float idotn_2 = (ix * nx + iy * ny) * 2.0f;
+    rx = ix - idotn_2 * nx;
+    ry = iy - idotn_2 * ny;
+}
+
+int Renderer::refract(float ix, float iy, float nx, float ny, float eta, float &rx, float &ry) {
+    float idotn = ix * nx + iy * ny;
+    float k = 1.0f - eta * eta * (1.0f - idotn * idotn);
+    if (k < 0.0f)
+        return 0;
+    float a = eta * idotn + sqrtf(k);
+    rx = eta * ix - a * nx;
+    ry = eta * iy - a * ny;
+    return 1;
 }

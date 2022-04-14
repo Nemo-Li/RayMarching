@@ -22,8 +22,8 @@ Result Scene::moonEmissiveScene(float x, float y) {
 }
 
 Result Scene::sampleReflectScene(float x, float y) {
-    Result a = {SDF::circleSDF(x, y, 0.4f, 0.2f, 0.1f), glm::vec3(2.0f)};
-    Result b = {SDF::boxSDF(x, y, 0.5f, 0.8f, M_2PI / 16.0f, 0.1f, 0.1f), glm::vec3(0.0f)};
-    Result c = {SDF::boxSDF(x, y, 0.8f, 0.5f, M_2PI / 16.0f, 0.1f, 0.1f), glm::vec3(0.0f)};
+    Result a = {SDF::circleSDF(x, y, 0.4f, 0.2f, 0.1f), glm::vec3(2.0f), 0.0f};
+    Result b = {SDF::boxSDF(x, y, 0.5f, 0.8f, M_2PI / 16.0f, 0.1f, 0.1f), glm::vec3(0.0f), 0.9f};
+    Result c = {SDF::boxSDF(x, y, 0.8f, 0.5f, M_2PI / 16.0f, 0.1f, 0.1f), glm::vec3(0.0f), 0.9f};
     return SDF::unionOperation(SDF::unionOperation(a, b), c);
 }
