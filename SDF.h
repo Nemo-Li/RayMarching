@@ -12,6 +12,7 @@ struct Result {
     float sdf;
     //光强
     glm::vec3 emissive;
+    //反射
     float reflectivity;
     float eta;
     glm::vec3 absorption;
@@ -37,11 +38,19 @@ class SDF {
 public:
     // several shape sdf.
     static float circleSDF(float x, float y, float cx, float cy, float radius);
+    static float segmentSDF(float x, float y, float ax, float ay, float bx, float by);
+
 
     // sdf operation.
     static Result unionOperation(Result a, Result b);
     static Result intersectOperation(Result a, Result b);
     static Result subtractOperation(Result a, Result b);
+
+    static float capsuleSDF(float x, float y, float ax, float ay, float bx, float by, float radius);
+
+    static float boxSDF(float x, float y, float cx, float cy, float theta, float sx, float sy);
+
+    static float triangleSDF(float x, float y, float ax, float ay, float bx, float by, float cx, float cy);
 };
 
 

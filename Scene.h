@@ -10,6 +10,10 @@
 class Scene {
 public:
     static Result threeEmissiveSphereScene(float x, float y);
+
+    static Result moonEmissiveScene(float x, float y);
+
+    static Result sampleReflectScene(float x, float y);
 };
 
 

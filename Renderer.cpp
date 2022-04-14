@@ -8,6 +8,8 @@
 #include "Scene.h"
 
 #define M_2PI 6.28318530718f
+#define EPSILON 1e-6f
+
 using namespace tbb;
 
 unsigned char &Renderer::getInitPng(const int width, const int height, const int channel) {
@@ -62,8 +64,7 @@ unsigned char &Renderer::render() {
             size_t row = i / m_width;
             glm::vec3 color(0.0);
             //sampling and lighting
-            color.x = color.y = color.z =
-                    sample(float(col) / m_width, float(row) / m_height);
+            color = sample(float(col) / m_width, float(row) / m_height);
             //保存到png图片
             drawPixel(row, col, color);
         }
@@ -73,19 +74,34 @@ unsigned char &Renderer::render() {
 
 //x 和 y 分别转化为百分比 [0,1]
 //每个像素采样
-float Renderer::sample(float x, float y) {
-    float sum = 0.0f;
+//float Renderer::sample(float x, float y) {
+//    float sum = 0.0f;
+//    //对每个像素采样 samples次 360度的光线
+//    for (int i = 0; i < m_samples; ++i) {
+//        // randome sampling.
+//        // float angle = M_2PI * rand() / RAND_MAX;
+//        // stratified samping.
+//        // float angle = M_2PI * i / m_samples;
+//        // Jittered Sampling
+//        float angle = M_2PI * (i + static_cast<float>(rand()) / RAND_MAX) / m_samples;
+//        sum += trace(x, y, cosf(angle), sinf(angle));
+//    }
+//    return sum / m_samples;
+//}
+
+glm::vec3 Renderer::sample(float x, float y) {
+    //辐射度量 光强
+    glm::vec3 radiance = glm::vec3(0.0f);
     //对每个像素采样 samples次 360度的光线
     for (int i = 0; i < m_samples; ++i) {
-        // randome sampling.
-        // float angle = M_2PI * rand() / RAND_MAX;
-        // stratified samping.
-        // float angle = M_2PI * i / m_samples;
-        // Jittered Sampling
-        float angle = M_2PI * (i + static_cast<float>(rand()) / RAND_MAX) / m_samples;
-        sum += trace(x, y, cosf(angle), sinf(angle));
+        float angle = M_2PI * (i + static_cast<float>(rand()) / RAND_MAX) / float(m_samples);
+
+        radiance += deNan(trace(x, y, cosf(angle), sinf(angle), 0));
     }
-    return sum / m_samples;
+    radiance.x /= m_samples;
+    radiance.y /= m_samples;
+    radiance.z /= m_samples;
+    return radiance;
 }
 
 void Renderer::drawPixel(unsigned int row, unsigned int col, const glm::vec3 &color) {
@@ -106,13 +122,69 @@ float Renderer::trace(float ox, float oy, float dx, float dy) {
     float epsilon = 1e-6f; //0.000001
     for (int i = 0; i < maxIter && step < maxDistance; ++i) {
         //dx 和 dy 表示光线行进方向
-        //float sdf = SDF::circleSDF(ox + dx * step, oy + dy * step, 0.5f, 0.5f, 0.1f);
-        const Result &result = Scene::threeEmissiveSphereScene(float(ox + dx * step), float(oy + dy * step));
-        float sdf = result.sdf;
+//        float sdf = SDF::segmentSDF(ox + dx * step, oy + dy * step, 0.25f, 0.5f, 0.5f, 0.5f);
+        float sdf = SDF::triangleSDF(ox + dx * step, oy + dy * step, 0.5f, 0.2f, 0.8f, 0.8f, 0.3f, 0.6f);
+//        const Result &result = Scene::moonEmissiveScene(float(ox + dx * step), float(oy + dy * step));
+//        float sdf = result.sdf;
         // reach the edge(==0) or inside(<0)
         if (sdf < epsilon)
-            return result.emissive.x;
+//            return result.emissive.x;
+            return 2.0f;
         step += sdf;
     }
     return 0.0f;
+}
+
+glm::vec3 Renderer::trace(float ox, float oy, float dx, float dy, int depth) {
+    float step = 0.0f;
+    int maxIter = 10;
+    float maxDistance = 2.0f;
+    float epsilon = 1e-6f; //0.000001
+    for (int i = 0; i < maxIter && step < maxDistance; ++i) {
+        const Result &result = Scene::sampleReflectScene(float(ox + dx * step), float(oy + dy * step));
+        float sdf = result.sdf;
+        if (sdf < epsilon)
+            return result.emissive;
+        step += sdf;
+    }
+    return glm::vec3(0.0f);
+}
+
+Result Renderer::scene(float x, float y) {
+    // scene 1.
+    //Result ret = Scene::oneEmissiveSphereScene(ox + dx * step, oy + dy * step);
+    // scene 2.
+    Result ret = Scene::threeEmissiveSphereScene(x, y);
+    // scene 3.
+    //Result ret = Scene::moonEmissiveScene(ox + dx * step, oy + dy * step);
+    // scene 4.
+    //Result ret = Scene::planeEmissiveScene(ox + dx * step, oy + dy * step);
+    // scene 5.
+    //Result ret = Scene::capsuleEmissiveScene(ox + dx * step, oy + dy * step);
+    // scene 6.
+    //Result ret = Scene::boxEmissiveScene(ox + dx * step, oy + dy * step);
+    // scene 7.
+    //Result ret = Scene::triangleEmissiveScene(x, y);
+    // scene 8.
+    //Result ret = Scene::reflectEmissiveScene(x, y);
+    // scene 9.
+    //Result ret = Scene::causticEmissiveScene(x, y);
+    // scene 10.
+    //Result ret = Scene::rectRefractEmissiveScene(x, y);
+    // scene 11.
+    //Result ret = Scene::refractEmissiveScene(x, y);
+    // scene 12.
+    //Result ret = Scene::beerLambertScene(x, y);
+    // scene 13.
+    //Result ret = Scene::heartScene(x, y);
+    // scene 14.
+    //Result ret = Scene::finalScene(x, y);
+    // scene 15.
+    //Result ret = Scene::nameScene(x, y);
+    return ret;
+}
+
+void Renderer::gradient(float x, float y, float &nx, float &ny) {
+    nx = (scene(x + EPSILON, y).sdf - scene(x - EPSILON, y).sdf) * (0.5f / EPSILON);
+    ny = (scene(x, y + EPSILON).sdf - scene(x, y - EPSILON).sdf) * (0.5f / EPSILON);
 }

@@ -5,9 +5,9 @@
 #ifndef INC_2DRAYMARCHINGRENDERER_RENDERER_H
 #define INC_2DRAYMARCHINGRENDERER_RENDERER_H
 
-
 #include <libunwind.h>
 #include "glm/glm.hpp"
+#include "SDF.h"
 
 class Renderer {
 private:
@@ -26,9 +26,23 @@ public:
 
     void drawPixel(unsigned int row, unsigned int col, const glm::vec3 &color);
 
-    float sample(float x, float y);
+    glm::vec3 sample(float x, float y);
 
     static float trace(float ox, float oy, float dx, float dy);
+
+    glm::vec3 trace(float ox, float oy, float dx, float dy, int depth);
+
+    void gradient(float x, float y, float &nx, float &ny);
+
+    Result scene(float x, float y);
+
+    glm::vec3 deNan(const glm::vec3 &target) {
+        glm::vec3 temp = target;
+        if (!(temp[0] == temp[0]))temp[0] = 0;
+        if (!(temp[1] == temp[1]))temp[1] = 0;
+        if (!(temp[2] == temp[2]))temp[2] = 0;
+        return temp;
+    }
 };
 
 

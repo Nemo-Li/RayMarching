@@ -11,6 +11,54 @@ float SDF::circleSDF(float x, float y, float cx, float cy, float radius) {
     return sqrtf(ux * ux + uy * uy) - radius;
 }
 
+//线段sdf
+float SDF::segmentSDF(float x, float y, float ax, float ay, float bx, float by)
+{
+    float vx = x - ax, vy = y - ay;
+    float ux = bx - ax, uy = by - ay;
+    float t = fmaxf(fminf((vx * ux + vy * uy) / (ux * ux + uy * uy), 1.0f), 0.0f);
+    float dx = vx - ux * t, dy = vy - uy * t;
+    return sqrtf(dx * dx + dy * dy);
+}
+
+float SDF::capsuleSDF(float x, float y, float ax, float ay, float bx, float by, float radius)
+{
+    return segmentSDF(x, y, ax, ay, bx, by) - radius;
+}
+
+//矩形sdf函数 定向包围盒 OBB 轴向包围盒 AABB
+//计算公式参考：https://zhuanlan.zhihu.com/p/420700051
+//glsl
+// float myBoxSDF(in vec2 p, in vec2 a)
+//{
+//    vec2 q = abs(p)-a;
+//    return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);
+//}
+//从任意旋转位置，回到世界坐标系原点，需要矩阵旋转以及平移操作
+float SDF::boxSDF(float x, float y, float cx, float cy, float theta, float sx, float sy)
+{
+	float cosTheta = cosf(theta), sinTheta = sinf(theta);
+	//dx dy 表示q向量 右上顶点s到任意点p的向量
+	float dx = fabs((x - cx) * cosTheta + (y - cy)*sinTheta) - sx;
+	float dy = fabs((y - cy) * cosTheta - (x - cx)*sinTheta) - sy;
+	float ax = fmaxf(dx, 0.0f), ay = fmaxf(dy, 0.0f);
+	//第一项 第4象限 第二项 第1，2，3象限
+	return fminf(fmaxf(dx, dy), 0.0f) + sqrtf(ax * ax + ay * ay);
+}
+
+float SDF::triangleSDF(float x, float y, float ax, float ay, float bx, float by, float cx, float cy)
+{
+    //距离3条线段的最短距离
+    float d = fminf(fminf(
+            segmentSDF(x, y, ax, ay, bx, by),
+            segmentSDF(x, y, bx, by, cx, cy)),
+                    segmentSDF(x, y, cx, cy, ax, ay));
+    return
+            (bx - ax) * (y - ay) > (by - ay) * (x - ax) &&
+            (cx - bx) * (y - by) > (cy - by) * (x - bx) &&
+            (ax - cx) * (y - cy) > (ay - cy) * (x - cx) ? -d : d;
+}
+
 Result SDF::unionOperation(Result a, Result b)
 {
     return a.sdf < b.sdf ? a : b;
